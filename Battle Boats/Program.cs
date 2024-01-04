@@ -18,7 +18,9 @@ class Program
     static async Task Main()
     {
         tile[,] playerGrid = new tile[8, 8];
+        tile[,] playerView = new tile[8, 8];
         tile[,] computerGrid = new tile[8, 8];
+
         string playerName = Menu.playername();
         Console.Clear();
         string input = Menu.menuOptions();
@@ -61,8 +63,8 @@ class Menu
                     break;
                 case "load game":
                     Load.LoadPlayerName();
-                    Load.LoadPlayerGrid();
-                    Load.LoadComputerGrid();
+                    playerGrid = Load.LoadPlayerGrid();
+                    computerGrid = Load.LoadComputerGrid();
                     Game.loop( playerGrid,  playerName,  computerGrid);
 
                     break;
@@ -279,8 +281,8 @@ class Save
     public static void loop( tile[,]playerGrid, string playerName, tile[,] computerGrid)
     {
             bool turn;
-            bool win;
-            while (win = false)
+            bool win = false;
+            while (win == false)
             {
 
                 Console.Clear();
@@ -337,31 +339,32 @@ class Save
         }
 }
 
-class Display
-{
-    public static void DisplayGrid(string gridName, tile[,] grid)
+    class Display
     {
-        Console.WriteLine($"{gridName}\n");
-
-
-        Console.Write("  ");
-        for (int col = 0; col < grid.GetLength(1); col++)
+        public static void DisplayGrid(string gridName, tile[,] grid)
         {
-            Console.Write($"{col + 1} ");
-        }
-        Console.WriteLine();
+            Console.WriteLine($"{gridName}\n");
 
 
-        for (int row = 0; row < grid.GetLength(0); row++)
-        {
-            Console.Write($"{row + 1} ");
+            Console.Write("  ");
             for (int col = 0; col < grid.GetLength(1); col++)
             {
-                    switch (grid[row, col]) {
+                Console.Write($"{col + 1} ");
+            }
+            Console.WriteLine();
+
+
+            for (int row = 0; row < grid.GetLength(0); row++)
+            {
+                Console.Write($"{row + 1} ");
+                for (int col = 0; col < grid.GetLength(1); col++)
+                {
+                    switch (grid[row, col])
+                    {
                         case tile.empty:
                             Console.Write("~ ");
                             grid[row, col] = tile.empty;
-                                 break;
+                            break;
                         case tile.hit:
                             Console.Write("X ");
                             grid[row, col] = tile.hit;
@@ -371,22 +374,62 @@ class Display
                             grid[row, col] = tile.miss;
                             break;
                         case tile.boat:
-                            Console.Write( "B ");
-                            grid[row,col] = tile.boat;
+                            Console.Write("B ");
+                            grid[row, col] = tile.boat;
                             break;
 
 
                     }
                 }
 
-            Console.WriteLine();
+                Console.WriteLine();
+            }
+            Console.WriteLine("press enter to continue");
+            Console.ReadLine();
+            Console.Clear();
         }
-        Console.WriteLine("press enter to continue");
-        Console.ReadLine();
-        Console.Clear();
+        public static void PlayerViewGrid(tile[,] playerGrid, tile[,] playerView)
+        {
+            Console.WriteLine("Player View Grid\n");
+
+            Console.Write("  ");
+            for (int col = 0; col < playerView.GetLength(1); col++)
+            {
+                Console.Write($"{col + 1} ");
+            }
+            Console.WriteLine();
+
+            for (int row = 0; row < playerView.GetLength(0); row++)
+            {
+                Console.Write($"{row + 1} ");
+                for (int col = 0; col < playerView.GetLength(1); col++)
+                {
+                    switch (playerView[row, col])
+                    {
+                        case tile.empty:
+                            Console.Write("~ ");
+                            break;
+                        case tile.hit:
+                            Console.Write("X ");
+                            break;
+                        case tile.miss:
+                            Console.Write("O ");
+                            break;
+                        default:
+                            Console.Write("~ "); // Default to empty for unknown tiles
+                            break;
+                    }
+                }
+                Console.WriteLine();
+            }
+
+            Console.WriteLine("press enter to continue");
+            Console.ReadLine();
+           // Console.Clear();
+        }
+
     }
-}
-class Create
+    class Create
 {
     public static void InitializeGrid(tile[,] grid)
     {
@@ -407,6 +450,7 @@ class Create
 
         for (int i = 0; i < 5; i++)
         {
+                Display.DisplayGrid(playerName,grid);
             Console.WriteLine($"\n{playerName}, Place Boat {i + 1}");
             int row, col;
             bool validInput = false;
@@ -508,56 +552,66 @@ class Player
 
         } while (colShot >= 0 && rowShot >= 0 && playerGrid[rowShot, colShot] == tile.hit);
     }
-        public static void shoot(string playerName, int rowShot, int colShot, tile[,]computerGrid, tile[,]playerGrid,bool turn )
+        public static void shoot(string playerName, int rowShot, int colShot, tile[,] computerGrid, tile[,] playerGrid, bool turn)
         {
             Console.WriteLine($"{playerName}, it's your turn. Enter the coordinates to shoot at.");
+            var tempgrid = computerGrid;
+            Display.PlayerViewGrid(playerGrid, tempgrid); // Provide both playerGrid and tempgrid as parameters
 
-            Console.Write("Enter row (1-8): ");
-            string rowInput = Console.ReadLine();
+            bool validInput = true;
 
-            Console.Write("Enter column (1-8): ");
-            string colInput = Console.ReadLine();
-            if (int.TryParse(rowInput, out rowShot) && int.TryParse(colInput, out colShot))
+            do
             {
-                rowShot--;
-                colShot--;
+                Console.Write("Enter row (1-8): ");
+                string rowInput = Console.ReadLine();
 
-                if (rowShot >= 0 && rowShot < computerGrid.GetLength(0) && colShot >= 0 && colShot < computerGrid.GetLength(1))
+                Console.Write("Enter column (1-8): ");
+                string colInput = Console.ReadLine();
+
+                if (int.TryParse(rowInput, out rowShot) && int.TryParse(colInput, out colShot))
                 {
-                    if (computerGrid[rowShot, colShot] != tile.hit || computerGrid[rowShot, colShot] != tile.miss)
+                    rowShot--;
+                    colShot--;
+
+                    if (rowShot >= 0 && rowShot < computerGrid.GetLength(0) && colShot >= 0 && colShot < computerGrid.GetLength(1))
                     {
-                        if (computerGrid[rowShot, colShot] == tile.boat)
+                        if (computerGrid[rowShot, colShot] != tile.hit && computerGrid[rowShot, colShot] != tile.miss)
                         {
-                            Console.WriteLine("Hit!");
-
-
-                            computerGrid[rowShot, colShot] = tile.hit;
-
-                            Game.checkWin(turn, playerGrid, computerGrid);
+                            if (computerGrid[rowShot, colShot] == tile.boat)
+                            {
+                                Console.WriteLine("Hit!");
+                                computerGrid[rowShot, colShot] = tile.hit;
+                                Game.checkWin(turn, playerGrid, computerGrid);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Miss!");
+                                computerGrid[rowShot, colShot] = tile.miss;
+                            }
                         }
                         else
                         {
-                            Console.WriteLine("Miss!");
-                            computerGrid[rowShot, colShot] = tile.miss;
+                            Console.WriteLine("Invalid shot. You've already shot at this location. Try again.");
+                            validInput = false; // Set validInput to false to continue the loop
                         }
                     }
                     else
                     {
-                        Console.WriteLine("Invalid shot. You've already shot at this location. Try again.");
+                        Console.WriteLine("Invalid input. Row and column must be between 1 and 8. Try again.");
+                        validInput = false; // Set validInput to false to continue the loop
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Invalid input. Row and column must be between 1 and 8. Try again.");
+                    Console.WriteLine("Invalid input. Please enter valid integers for row and column. Try again.");
+                    validInput = false; // Set validInput to false to continue the loop
                 }
-            }
-            else
-            {
-                Console.WriteLine("Invalid input. Please enter valid integers for row and column. Try again.");
-            }
+            } while (!validInput);
         }
-}
-class Computer
+
+
+    }
+    class Computer
 {
         public static void computerTurn(tile[,] playerGrid, tile[,] computerGrid, bool turn)
         {
