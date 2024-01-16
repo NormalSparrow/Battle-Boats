@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using System.IO;
-enum tile
+enum tile //this will be the enum for each cell the 2d arrays for the grids
 {
     hit,
     miss,
@@ -15,23 +15,23 @@ enum tile
 
 class Program
 {
-    static async Task Main()
+    static async Task Main() 
     {
-        tile[,] playerGrid = new tile[8, 8];
+        tile[,] playerGrid = new tile[8, 8];//creates a 2d array of enums
         tile[,] playerView = new tile[8, 8];
         tile[,] computerGrid = new tile[8, 8];
 
-        string playerName = Menu.playername();
+        string playerName = Menu.playername();//calls function for playername
         Console.Clear();
-        string input = Menu.menuOptions();
-
-        Menu.MenuChoice(playerGrid, computerGrid, playerName, input);
+        string input = Menu.menuOptions();//calls function menu options and returns a string which is input for the Menu choice switch case statment later on
+    
+        Menu.MenuChoice(playerGrid, computerGrid, playerName, input);// calls menu choice that will use "input" string
         Game.loop( playerGrid, playerName, computerGrid);
 
     }
 class Menu
-{
-    public static string playername()
+{   
+    public static string playername() //asks player name
     {
         Console.WriteLine("whats your name player?");
         string playerName = Console.ReadLine();
@@ -43,34 +43,37 @@ class Menu
             Console.Clear();
         Console.WriteLine("helloooo welcome to the menu \n 1. new game \n 2. exit game \n 3. instructions\n 4. load game");
         Console.Write("Option: ");
-        return Console.ReadLine();
+        return Console.ReadLine(); 
     }
 
-    public static async void MenuChoice(tile[,] playerGrid, tile[,] computerGrid,  string playerName, string input)
+    public static async void MenuChoice(tile[,] playerGrid, tile[,] computerGrid,  string playerName, string input)//all possible outcomes of the menu options
     {
             switch (input)
             {
-                case "new game":
-                    Game.PlayNewGame(playerGrid, computerGrid, playerName);
+                case "1":
+                    Game.PlayNewGame(playerGrid, computerGrid, playerName);// this initializes the player/computer grids  before starting the function game.loop
                     break;
-                case "exit game":
-                    ExitGame();
+                case "2":
+                    ExitGame();//I wanted to delay the exit game so it felt more smooth for the user
                     await Task.Delay(4000);
                     break;
-                case "instructions":
-                    Instructions();
-                    Console.ReadLine();
+                case "3":
+                    Instructions();//displays all instructions
+                    Console.ReadLine();//waits for user input so it allows time for the user to finish reading before clearing
+                    Console.Clear();
+                    input = menuOptions(); //re inputs "input" string if they want to start a new game or not
+                    Menu.MenuChoice(playerGrid, computerGrid, playerName, input);//calls input string
                     break;
-                case "load game":
-                    Load.LoadPlayerName();
-                    playerGrid = Load.LoadPlayerGrid();
+                case "4": //player name and player grid and computer grid are all split into 3 seperate functions to make it more readable and easier to change if needed
+                    Load.LoadPlayerName();//calls function load player grid
+                    playerGrid = Load.LoadPlayerGrid(); //after the grid has been read by streamreader,  player/computer grids values change to the loaded file.
                     computerGrid = Load.LoadComputerGrid();
-                    Game.loop( playerGrid,  playerName,  computerGrid);
+                    Game.loop( playerGrid,  playerName,  computerGrid);//starts the loop of the game after it has loaded everything.
 
                     break;
-                default:
+                default://this is a catcher incase the user inputs anything else.
                     Console.WriteLine("Invalid option. Please try again.");
-                    Menu.menuOptions();
+                    Menu.menuOptions();//this asks to reinput the string "input" for menu choice.
                     Menu.MenuChoice(playerGrid, computerGrid, playerName, Console.ReadLine());
                     break;
 
@@ -82,10 +85,11 @@ class Menu
     {
 
         Console.Clear();
+            Console.Clear();
         Console.Write("Exiting game");
 
         await Task.Delay(1000);
-        Console.Write(".");
+        Console.Write(".");//animation to make the game feel more alive
         await Task.Delay(1000);
         Console.Write(".");
         await Task.Delay(1000);
@@ -93,58 +97,56 @@ class Menu
         await Task.Delay(1000);
         System.Environment.Exit(0);
     }
-    public static void Instructions()
+    public static void Instructions() //displays all instructions.
         {
             Console.WriteLine("Welcome to Battleship!");
             Console.WriteLine("Rules:");
 
             DisplayRule("1. The game is played on a 10x10 grid.");
-            DisplayRule("2. Each player has a fleet of boats to place on the grid.");
-            DisplayRule("3. The fleet consists of ships of different sizes: Carrier (5), Battleship (4), Cruiser (3), Submarine (3), and Destroyer (2).");
-            DisplayRule("4. Players take turns to place their boats on the grid.");
-            DisplayRule("5. Boats can be placed vertically or horizontally, but not diagonally.");
-            DisplayRule("6. Boats cannot overlap with each other on the grid.");
-            DisplayRule("7. After placing the boats, players take turns to guess the coordinates of the opponent's Boats.");
-            DisplayRule("8. The grid is marked with 'X' for a hit and 'O' for a miss.");
-            DisplayRule("9. The game continues until one player sinks all the opponent's Boats.");
+            DisplayRule("2. Each player has a fleet of 5 boats to place on the grid.");
+            DisplayRule("3. Players take turns to place their boats on the grid.");
+            DisplayRule("4 Boats can be placed vertically or horizontally, but not diagonally.");
+            DisplayRule("5. Boats cannot overlap with each other on the grid.");
+            DisplayRule("6. ter placing the boats, players take turns to guess the coordinates of the opponent's Boats.");
+            DisplayRule("7. The grid is marked with 'X' for a hit and 'O' for a miss.");
+            DisplayRule("8 The game continues until one player sinks all the opponent's Boats.");
 
             Console.WriteLine("\nLet the battle begin!");
+            
 
         }
-        static void DisplayRule(string rule)
+        static void DisplayRule(string rule)//I used this because it's slightly easier to add/take away rules when changing code
         {
             Console.WriteLine($"- {rule}");
         }
     }
-class Save
+class Save // I made this a seperate class because I needed to debug "Save" consistently therefore i put it into it's own class that can be called when needed.
     {
         public static void ToFile(string playerName, tile[,] playerGrid, tile[,] computerGrid)
         {
-            string filename = @"./saved game.txt";
+            string filename = @"./saved game.txt"; // creates a string so i can open it with streamwriter
             using (StreamWriter sw = new StreamWriter(filename))
             {
             
-                sw.WriteLine(playerName);
-
+                sw.WriteLine(playerName);// This will be writing the first line of the txt file as the string "playerName"
                 sw.WriteLine(playerGrid.GetLength(0));
                 sw.WriteLine(playerGrid.GetLength(1));
 
               
                 for (int i = 0; i < playerGrid.GetLength(0); i++)
                 {
-                    for (int j = 0; j < playerGrid.GetLength(1); j++)
+                    for (int j = 0; j < playerGrid.GetLength(1); j++)   
                     {
                         sw.Write((int)playerGrid[i, j] + " ");
                     }
-                    sw.WriteLine();
+                    sw.WriteLine();//this for loop keeps looping and adds a new line everytime it finishs one row of the grid.
                 }
 
-               
                 sw.WriteLine(computerGrid.GetLength(0));
                 sw.WriteLine(computerGrid.GetLength(1));
 
              
-                for (int i = 0; i < computerGrid.GetLength(0); i++)
+                for (int i = 0; i < computerGrid.GetLength(0); i++)//same thing as playerGrid.
                 {
                     for (int j = 0; j < computerGrid.GetLength(1); j++)
                     {
@@ -161,20 +163,20 @@ class Save
     {
         public static string LoadPlayerName()
         {
-            string playerName = "";
+            string playerName = "";//redefines playerName
             string filename = @"./saved game.txt";
 
-            if (File.Exists(filename))
+            if (File.Exists(filename))//A catch incase the user has never saved a file before where by this won't run.
             {
                 using (StreamReader sr = new StreamReader(filename))
                 {
                     try
                     {
-                        playerName = sr.ReadLine();
+                        playerName = sr.ReadLine();//reads the first line of the txt file and calls it playerName.
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("Error reading player name from file: " + ex.Message);
+                        Console.WriteLine("Error reading player name from file: " + ex.Message); //for debugging this was very useful as it would display the error message.
                     }
                 }
             }
@@ -182,7 +184,7 @@ class Save
             return playerName;
         }
 
-        public static tile[,] LoadGridFromFile(StreamReader sr)
+        public static tile[,] LoadGridFromFile(StreamReader sr)//provides a function to read an entire 8 by 8 grid.
         {
             tile[,] grid = new tile[0, 0];
 
@@ -207,7 +209,7 @@ class Save
             {
                 using (StreamReader sr = new StreamReader(filename))
                 {
-                    // Skip the player name line
+                    // Skip the player name line so it will not break when LoadGridFromFile when called.
                     sr.ReadLine();
 
                     playerGrid = LoadGridFromFile(sr);
@@ -278,7 +280,7 @@ class Save
     }
     class Game
 {
-    public static void loop( tile[,]playerGrid, string playerName, tile[,] computerGrid)
+    public static void loop( tile[,]playerGrid, string playerName, tile[,] computerGrid) //this will be the loop that is the base logic of battle boats game
     {
             bool turn;
             bool win = false;
@@ -300,9 +302,9 @@ class Save
             };
     }
 
-    public static void checkWin(bool turn, tile[,] playerGrid, tile[,]computerGrid)
+    public static void checkWin(bool turn, tile[,] playerGrid, tile[,]computerGrid) //this function will always check after player/computer turn to see if they have won
     {
-       if (turn = true)
+       if (turn = true)// i used turn as a bool here so that the computer knows who has won depending if its true or false.
         {
             if (!computerGrid.Cast<tile>().Any(cell => cell == tile.boat))
             {
@@ -324,7 +326,7 @@ class Save
         }
     }
 
-        public static void PlayNewGame(tile[,] playerGrid, tile[,] computerGrid, string playerName)
+        public static void PlayNewGame(tile[,] playerGrid, tile[,] computerGrid, string playerName) 
         {
             Create.InitializeGrid(playerGrid);
             Create.InitializeGrid(computerGrid);
@@ -347,7 +349,7 @@ class Save
 
 
             Console.Write("  ");
-            for (int col = 0; col < grid.GetLength(1); col++)
+            for (int col = 0; col < grid.GetLength(1); col++) //reads through each line of said grid.
             {
                 Console.Write($"{col + 1} ");
             }
@@ -359,7 +361,7 @@ class Save
                 Console.Write($"{row + 1} ");
                 for (int col = 0; col < grid.GetLength(1); col++)
                 {
-                    switch (grid[row, col])
+                    switch (grid[row, col])//this is using the true or false for each type of value for the enum.
                     {
                         case tile.empty:
                             Console.Write("~ ");
@@ -377,7 +379,7 @@ class Save
                             Console.Write("B ");
                             grid[row, col] = tile.boat;
                             break;
-
+                            
 
                     }
                 }
@@ -388,7 +390,7 @@ class Save
             Console.ReadLine();
             Console.Clear();
         }
-        public static void PlayerViewGrid(tile[,] playerGrid, tile[,] playerView)
+        public static void PlayerViewGrid(tile[,] playerGrid, tile[,] playerView) //I wanted for the user to see where they have shot/missed without seeing the opponents boats.
         {
             Console.WriteLine("Player View Grid\n");
 
@@ -402,7 +404,7 @@ class Save
             for (int row = 0; row < playerView.GetLength(0); row++)
             {
                 Console.Write($"{row + 1} ");
-                for (int col = 0; col < playerView.GetLength(1); col++)
+                for (int col = 0; col < playerView.GetLength(1); col++) //the same as display grid but without B for boats.
                 {
                     switch (playerView[row, col])
                     {
@@ -435,7 +437,7 @@ class Save
     {
         for (int row = 0; row < grid.GetLength(0); row++)
         {
-            for (int col = 0; col < grid.GetLength(1); col++)
+            for (int col = 0; col < grid.GetLength(1); col++)//creates an enum for each cell for the grid.
 
             {
                 grid[row, col] = tile.empty; 
@@ -450,7 +452,7 @@ class Save
 
         for (int i = 0; i < 5; i++)
         {
-                Display.DisplayGrid(playerName,grid);
+             Display.DisplayGrid(playerName,grid);//i used display grid here so when it loops it updates where the player has placed their grid with each placement of boat.
             Console.WriteLine($"\n{playerName}, Place Boat {i + 1}");
             int row, col;
             bool validInput = false;
@@ -482,7 +484,7 @@ class Save
                         else
                         {
                             Console.WriteLine("Invalid placement. Cell already occupied. Try again.");
-                            validInput = false;
+                            validInput = false; 
                         }
                     }
                     else
@@ -498,7 +500,7 @@ class Save
         }
     }
 
-    public static void PlaceRandomBoats( tile[,] computergrid)
+    public static void PlaceRandomBoats( tile[,] computergrid)// computer logic for placing boats.
     {
         Random rand = new Random();
 
@@ -520,30 +522,39 @@ class Save
 }
 class Player
 {
-    public static void PlayerTurn(string playerName,tile[,] playerGrid,bool turn,tile[,] computerGrid)
+    public static void PlayerTurn(string playerName,tile[,] playerGrid,bool turn,tile[,] computerGrid)//I used this because I wanted it so that the player can leave the game and save at any time.
     {
         int rowShot = 0, colShot = 0; // Initialize colShot with a default value
             
             
         do
         {
-                Console.WriteLine("You can either: \n - shoot\n - save and exit game\n - exit game");
-                string input = Console.ReadLine();
-                switch (input)
-                {
-                    case "save and exit game":
-                        Save.ToFile(playerName,playerGrid,computerGrid);
-                        Menu.ExitGame();
-                        break;
-                    case "exit game":
-                        Menu.ExitGame();
-                        break;
-                    case "shoot":
-                        shoot(playerName,rowShot, colShot, computerGrid, playerGrid, turn);
-                        break;
-                    default:
-                        break;
+                Console.WriteLine("You can either: \n 1. shoot\n 2. save and exit game\n 3. exit game");
+               
+                bool validInput = true;
+                while (validInput = true) {
+                    string input = Console.ReadLine();
+                    switch (input)
+                    {
+                        case "2":
+                            Save.ToFile(playerName, playerGrid, computerGrid);
+                            Menu.ExitGame();
+                            validInput = false;
+                            break;
+                        case "3":
+                            Menu.ExitGame();
+                            break;
+                        case "1":
+                            shoot(playerName, rowShot, colShot, computerGrid, playerGrid, turn);
+                            validInput = false;
+                            break;
+                        default:
+                            Console.WriteLine("Thats not a valid input, try again");
+                            
+                            break;
+                    }
                 }
+                
                 
 
             
@@ -554,7 +565,7 @@ class Player
     }
         public static void shoot(string playerName, int rowShot, int colShot, tile[,] computerGrid, tile[,] playerGrid, bool turn)
         {
-            Console.WriteLine($"{playerName}, it's your turn. Enter the coordinates to shoot at.");
+            Console.WriteLine($"{playerName}, it's your turn. Enter the coordinates to shoot at."); 
             var tempgrid = computerGrid;
             Display.PlayerViewGrid(playerGrid, tempgrid); // Provide both playerGrid and tempgrid as parameters
 
